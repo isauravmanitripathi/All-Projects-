@@ -4,51 +4,8 @@ from moviepy.video.tools.subtitles import SubtitlesClip
 import os
 import sys
 
-def get_subtitle_preferences():
-    # Ask if subtitles are wanted
-    while True:
-        want_subtitles = input("Do you want subtitles in the video? (y/n): ").lower().strip()
-        if want_subtitles in ['y', 'n']:
-            break
-        print("Please enter 'y' or 'n'")
-    
-    if want_subtitles == 'n':
-        return None
-    
-    # Get position preference
-    while True:
-        position = input("Where do you want the subtitles? (center/bottom): ").lower().strip()
-        if position in ['center', 'bottom']:
-            break
-        print("Please enter 'center' or 'bottom'")
-    
-    # Get size preference
-    while True:
-        size = input("What size do you want the subtitles? (small/big): ").lower().strip()
-        if size in ['small', 'big']:
-            break
-        print("Please enter 'small' or 'big'")
-    
-    # Convert preferences to actual values
-    fontsize = 70 if size == 'big' else 40
-    
-    if position == 'center':
-        position_tuple = ('center', 'center')
-    else:
-        # Position above bottom
-        position_tuple = ('center', 'bottom')
-        
-    return {
-        'fontsize': fontsize,
-        'position': position_tuple,
-        'bottom_margin': 40 if position == 'bottom' else 0  # Add margin if at bottom
-    }
-
 def create_video_from_json(json_file="transcription_markers.json", output_file="output_video.mp4"):
     try:
-        # Get subtitle preferences first
-        subtitle_prefs = get_subtitle_preferences()
-        
         print(f"Reading JSON file: {json_file}")
         # Read the JSON file
         with open(json_file, 'r') as f:
@@ -101,32 +58,20 @@ def create_video_from_json(json_file="transcription_markers.json", output_file="
                        .set_position('center'))
             image_clips.append(img_clip)
         
-        # Create subtitles if wanted
+        print("Creating subtitle clips...")
+        # Create subtitles
         subtitle_clips = []
-        if subtitle_prefs is not None:
-            print("Creating subtitle clips...")
-            for second, segment in segments.items():
-                if segment["text"].strip():  # If there's text
-                    start_time = int(second)
-                    text = segment["text"]
-                    
-                    # Calculate position
-                    position = list(subtitle_prefs['position'])
-                    if position[1] == 'bottom':
-                        # Create a position slightly above bottom
-                        position = ('center', video_size[1] - subtitle_prefs['bottom_margin'])
-                    
-                    txt_clip = (TextClip(text, 
-                                       fontsize=subtitle_prefs['fontsize'], 
-                                       color='white', 
-                                       stroke_color='black',
-                                       stroke_width=2, 
-                                       font='Arial', 
-                                       size=video_size)
-                               .set_start(start_time)
-                               .set_duration(1)
-                               .set_position(position))
-                    subtitle_clips.append(txt_clip)
+        for second, segment in segments.items():
+            if segment["text"].strip():  # If there's text
+                start_time = int(second)
+                text = segment["text"]
+                
+                txt_clip = (TextClip(text, fontsize=70, color='white', stroke_color='black', 
+                                   stroke_width=2, font='Arial', size=video_size)
+                           .set_start(start_time)
+                           .set_duration(1)
+                           .set_position(('center', 'bottom')))
+                subtitle_clips.append(txt_clip)
         
         # If no images were found, create a black background
         if not image_clips:
