@@ -1,0 +1,7 @@
+# This file is used internally by FFMPEG.
+file 'file:/Volumes/hard-drive/projects-temp/temp/media/videos/animate/480p15/partial_movie_files/DotMovingInSShape/1185818338_2797148253_223132457.mp4'
+file 'file:/Volumes/hard-drive/projects-temp/temp/media/videos/animate/480p15/partial_movie_files/DotMovingInSShape/624642324_2919340033_3095053830.mp4'
+file 'file:/Volumes/hard-drive/projects-temp/temp/media/videos/animate/480p15/partial_movie_files/DotMovingInSShape/624642324_1042154649_2330586405.mp4'
+file 'file:/Volumes/hard-drive/projects-temp/temp/media/videos/animate/480p15/partial_movie_files/DotMovingInSShape/624642324_2919340033_673484274.mp4'
+file 'file:/Volumes/hard-drive/projects-temp/temp/media/videos/animate/480p15/partial_movie_files/DotMovingInSShape/624642324_4152095910_2744105641.mp4'
+file 'file:/Volumes/hard-drive/projects-temp/temp/media/videos/animate/480p15/partial_movie_files/DotMovingInSShape/624642324_2919340033_3632999845.mp4'
