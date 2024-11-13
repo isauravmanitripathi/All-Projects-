@@ -1,18 +1,14 @@
 import whisper
-import datetime
 import sys
+from collections import defaultdict
 
-def format_timestamp(seconds):
-    """Convert seconds to VTT timestamp format"""
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = int(seconds % 60)
-    msecs = int((seconds - int(seconds)) * 1000)
-    return f"{hours:02d}:{minutes:02d}:{secs:02d}.{msecs:03d}"
+def round_to_second(timestamp):
+    """Round a timestamp to the nearest second"""
+    return int(round(timestamp))
 
-def transcribe_to_vtt(audio_path):
+def transcribe_by_second(audio_path):
     try:
-        # Load the model (will download if not present)
+        # Load the model
         print("Loading Whisper model...")
         model = whisper.load_model("base")
         
@@ -20,18 +16,49 @@ def transcribe_to_vtt(audio_path):
         print("Transcribing audio...")
         result = model.transcribe(audio_path, verbose=False)
         
-        # Print VTT header
-        print("WEBVTT\n")
+        # Create a dictionary to store words by second
+        words_by_second = defaultdict(list)
         
         # Process each segment
-        for i, segment in enumerate(result["segments"], 1):
-            start_time = format_timestamp(segment["start"])
-            end_time = format_timestamp(segment["end"])
+        for segment in result["segments"]:
+            # Get start and end times for the segment
+            start_sec = round_to_second(segment["start"])
+            end_sec = round_to_second(segment["end"])
+            text = segment["text"].strip()
             
-            # Print VTT cue
-            print(f"{i}")
-            print(f"{start_time} --> {end_time}")
-            print(f"{segment['text'].strip()}\n")
+            # If the segment spans multiple seconds, try to distribute words across seconds
+            if start_sec != end_sec:
+                words = text.split()
+                total_duration = end_sec - start_sec
+                words_per_second = len(words) / total_duration
+                
+                for i, word in enumerate(words):
+                    # Estimate which second this word belongs to
+                    word_second = start_sec + int(i / words_per_second)
+                    if word_second <= end_sec:
+                        words_by_second[word_second].append(word)
+            else:
+                # If segment is within one second, add all text to that second
+                words_by_second[start_sec].append(text)
+        
+        # Print results chronologically
+        max_second = max(words_by_second.keys())
+        
+        print("\nTranscription by second:")
+        print("------------------------")
+        
+        for second in range(max_second + 1):
+            if second in words_by_second:
+                minute = second // 60
+                sec = second % 60
+                timestamp = f"{minute:02d}:{sec:02d}"
+                words = " ".join(words_by_second[second])
+                print(f"{timestamp} | {words}")
+            else:
+                minute = second // 60
+                sec = second % 60
+                timestamp = f"{minute:02d}:{sec:02d}"
+                print(f"{timestamp} | ...")
 
     except Exception as e:
         print(f"Error: {str(e)}", file=sys.stderr)
@@ -46,7 +73,7 @@ def main():
         sys.exit(1)
     
     # Process the audio file
-    transcribe_to_vtt(audio_path)
+    transcribe_by_second(audio_path)
 
 if __name__ == "__main__":
     main()
